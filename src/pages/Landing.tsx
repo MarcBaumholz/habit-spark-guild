@@ -1,26 +1,29 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, Target, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import brainLogo from "@/assets/brain-logo.png";
 
 const Landing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-gradient-bg">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 py-24">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-block mb-6 px-4 py-2 bg-accent/50 backdrop-blur-glass rounded-full border border-glass-border">
-              <span className="text-sm font-medium text-accent-foreground">
-                Build Better Habits Together
-              </span>
-            </div>
+            <img
+              src={brainLogo}
+              alt="HabitFlow"
+              className="w-40 h-40 mx-auto mb-8 drop-shadow-silver animate-fade-in"
+            />
             
             <h1 className="text-6xl font-bold text-foreground mb-6 leading-tight">
-              Track, Share & Grow
+              Build Your Mind
               <br />
-              <span className="text-primary">Your Habits</span>
+              <span className="bg-gradient-primary bg-clip-text text-transparent">
+                One Habit at a Time
+              </span>
             </h1>
             
             <p className="text-xl text-muted-foreground mb-12 leading-relaxed">
@@ -32,18 +35,11 @@ const Landing = () => {
             <div className="flex gap-4 justify-center">
               <Button 
                 size="lg" 
-                className="text-lg px-8 py-6 shadow-glass"
-                onClick={() => navigate("/profile")}
+                className="text-lg px-8 py-6 shadow-glass hover:shadow-deep transition-all"
+                onClick={() => navigate("/auth")}
               >
-                View Demo Profile
+                Get Started
                 <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="text-lg px-8 py-6"
-              >
-                Learn More
               </Button>
             </div>
           </div>
