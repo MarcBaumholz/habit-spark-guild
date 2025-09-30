@@ -14,7 +14,116 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      habits: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          frequency: string | null
+          id: string
+          is_public: boolean | null
+          status: Database["public"]["Enums"]["habit_status"] | null
+          streak: number | null
+          time_per_week: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          frequency?: string | null
+          id?: string
+          is_public?: boolean | null
+          status?: Database["public"]["Enums"]["habit_status"] | null
+          streak?: number | null
+          time_per_week?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          frequency?: string | null
+          id?: string
+          is_public?: boolean | null
+          status?: Database["public"]["Enums"]["habit_status"] | null
+          streak?: number | null
+          time_per_week?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          id: string
+          personality_type: string | null
+          total_streak: number | null
+          updated_at: string | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          personality_type?: string | null
+          total_streak?: number | null
+          updated_at?: string | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          personality_type?: string | null
+          total_streak?: number | null
+          updated_at?: string | null
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      subscribed_habits: {
+        Row: {
+          habit_id: string
+          id: string
+          subscribed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          habit_id: string
+          id?: string
+          subscribed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          habit_id?: string
+          id?: string
+          subscribed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscribed_habits_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +132,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      habit_status: "current" | "in_progress" | "planned"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +259,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      habit_status: ["current", "in_progress", "planned"],
+    },
   },
 } as const
