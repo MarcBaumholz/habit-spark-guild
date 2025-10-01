@@ -30,14 +30,14 @@ const Auth = () => {
         if (error) throw error;
         
         toast({ title: "Welcome back!" });
-        navigate("/profile");
+        navigate("/groups");
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { username },
-            emailRedirectTo: `${window.location.origin}/profile`,
+            emailRedirectTo: `${window.location.origin}/groups`,
           },
         });
 
@@ -47,7 +47,7 @@ const Auth = () => {
           title: "Account created!",
           description: "You can now start building your habits.",
         });
-        navigate("/profile");
+        navigate("/groups");
       }
     } catch (error: any) {
       toast({

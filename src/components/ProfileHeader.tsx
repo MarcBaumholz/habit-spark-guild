@@ -19,9 +19,10 @@ interface ProfileHeaderProps {
   profile: Profile | null;
   onLogout: () => void;
   onProfileUpdate: () => void;
+  isOwnProfile?: boolean;
 }
 
-export const ProfileHeader = ({ user, profile, onLogout, onProfileUpdate }: ProfileHeaderProps) => {
+export const ProfileHeader = ({ user, profile, onLogout, onProfileUpdate, isOwnProfile = true }: ProfileHeaderProps) => {
   const [editOpen, setEditOpen] = useState(false);
 
   return (
@@ -65,37 +66,41 @@ export const ProfileHeader = ({ user, profile, onLogout, onProfileUpdate }: Prof
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setEditOpen(true)}
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onLogout}
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
+            {isOwnProfile && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onLogout}
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <EditProfileDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        profile={profile}
-        userId={user.id}
-        onSuccess={() => {
-          onProfileUpdate();
-          setEditOpen(false);
-        }}
-      />
+      {isOwnProfile && (
+        <EditProfileDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          profile={profile}
+          userId={user.id}
+          onSuccess={() => {
+            onProfileUpdate();
+            setEditOpen(false);
+          }}
+        />
+      )}
     </>
   );
 };

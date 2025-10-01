@@ -1,162 +1,241 @@
-import { Target, Zap, Clock, Heart } from "lucide-react";
-import { HabitCard } from "@/components/HabitCard";
-import { HabitSection } from "@/components/HabitSection";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { ProfileHeader } from "@/components/ProfileHeader";
+import { HabitColumn } from "@/components/HabitColumn";
+import { HabitKanbanCard } from "@/components/HabitKanbanCard";
+import { HabitDetailDialog } from "@/components/HabitDetailDialog";
+import { AddHabitDialog } from "@/components/AddHabitDialog";
 import { Button } from "@/components/ui/button";
+import { Target, Zap, Clock, ArrowLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
-  // Mock data - wird später durch echte Daten ersetzt
-  const currentHabits = [
-    {
-      title: "Morning Meditation",
-      description: "10 minutes of mindfulness practice",
-      timePerWeek: "1h 10min",
-      frequency: "Daily",
-      streak: 23,
-      category: "Wellness",
-    },
-    {
-      title: "Reading",
-      description: "Read 30 pages before bed",
-      timePerWeek: "3h 30min",
-      frequency: "Daily",
-      streak: 45,
-      category: "Learning",
-    },
-    {
-      title: "Workout",
-      description: "Strength training session",
-      timePerWeek: "4h 30min",
-      frequency: "3x per week",
-      streak: 12,
-      category: "Fitness",
-    },
-  ];
+  const { userId } = useParams();
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [currentHabits, setCurrentHabits] = useState<any[]>([]);
+  const [inProgressHabits, setInProgressHabits] = useState<any[]>([]);
+  const [plannedHabits, setPlannedHabits] = useState<any[]>([]);
+  const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addStatus, setAddStatus] = useState<"current" | "in_progress" | "planned">("planned");
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const workingOnHabits = [
-    {
-      title: "Cold Shower",
-      description: "2 minutes cold shower after workout",
-      timePerWeek: "20min",
-      frequency: "Daily",
-      streak: 5,
-      category: "Health",
-    },
-    {
-      title: "Journaling",
-      description: "Evening reflection and gratitude",
-      timePerWeek: "1h 45min",
-      frequency: "Daily",
-      streak: 8,
-      category: "Mental Health",
-    },
-  ];
+  const isOwnProfile = user?.id === userId;
 
-  const plannedHabits = [
-    {
-      title: "Language Learning",
-      description: "Spanish practice with Duolingo",
-      timePerWeek: "2h 30min",
-      frequency: "5x per week",
-      category: "Learning",
-    },
-    {
-      title: "Meal Prep",
-      description: "Sunday meal preparation",
-      timePerWeek: "3h",
-      frequency: "Weekly",
-      category: "Nutrition",
-    },
-  ];
+  useEffect(() => {
+    checkUser();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate("/auth");
+      }
+    });
 
-  const subscribedHabits = [
-    {
-      title: "5AM Club",
-      description: "Wake up at 5AM and start the day productively",
-      timePerWeek: "7h",
-      frequency: "Daily",
-      category: "Productivity",
-      isSubscribed: true,
-    },
-  ];
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (user && userId) {
+      fetchProfile();
+      fetchHabits();
+    }
+  }, [user, userId]);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+    setUser(session.user);
+  };
+
+  const fetchProfile = async () => {
+    if (!userId) return;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      return;
+    }
+
+    setProfile(data);
+  };
+
+  const fetchHabits = async () => {
+    if (!userId) return;
+
+    const { data, error } = await supabase
+      .from("habits")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching habits:", error);
+      return;
+    }
+
+    setCurrentHabits(data.filter((h) => h.status === "current"));
+    setInProgressHabits(data.filter((h) => h.status === "in_progress"));
+    setPlannedHabits(data.filter((h) => h.status === "planned"));
+  };
+
+  const handleHabitClick = (id: string) => {
+    setSelectedHabitId(id);
+    setDetailOpen(true);
+  };
+
+  const handleAddHabit = (status: "current" | "in_progress" | "planned") => {
+    setAddStatus(status);
+    setAddOpen(true);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
+  if (!user || !profile) {
+    return (
+      <div className="min-h-screen bg-gradient-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      {/* Header */}
-      <div className="bg-glass/40 backdrop-blur-glass border-b border-glass-border">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center gap-6">
-            <Avatar className="w-24 h-24 border-4 border-background shadow-glass">
-              <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" />
-              <AvatarFallback>JD</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-foreground mb-2">John Doe</h1>
-              <p className="text-muted-foreground mb-4">Building better habits, one day at a time</p>
-              <div className="flex gap-6 text-sm">
-                <div>
-                  <span className="font-semibold text-foreground">6</span>
-                  <span className="text-muted-foreground ml-1">Active Habits</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-foreground">45</span>
-                  <span className="text-muted-foreground ml-1">Day Streak</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-foreground">12h 35min</span>
-                  <span className="text-muted-foreground ml-1">Weekly Time</span>
-                </div>
+    <div className="min-h-screen bg-gradient-bg">
+      {!isOwnProfile && (
+        <div className="max-w-7xl mx-auto px-6 pt-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        </div>
+      )}
+
+      <ProfileHeader
+        user={{ id: userId } as User}
+        profile={profile}
+        onLogout={handleLogout}
+        onProfileUpdate={fetchProfile}
+        isOwnProfile={isOwnProfile}
+      />
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-280px)]">
+          <HabitColumn
+            title="Current Habits"
+            icon={<Target className="w-5 h-5" />}
+            onAdd={isOwnProfile ? () => handleAddHabit("current") : undefined}
+          >
+            {currentHabits.map((habit) => (
+              <HabitKanbanCard
+                key={habit.id}
+                id={habit.id}
+                title={habit.title}
+                description={habit.description}
+                timePerWeek={habit.time_per_week}
+                frequency={habit.frequency}
+                streak={habit.streak}
+                category={habit.category}
+                onClick={handleHabitClick}
+              />
+            ))}
+            {currentHabits.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No current habits yet
               </div>
-            </div>
-            <Button variant="outline" className="self-start">
-              Edit Profile
-            </Button>
-          </div>
+            )}
+          </HabitColumn>
+
+          <HabitColumn
+            title="In Progress"
+            icon={<Zap className="w-5 h-5" />}
+            onAdd={isOwnProfile ? () => handleAddHabit("in_progress") : undefined}
+          >
+            {inProgressHabits.map((habit) => (
+              <HabitKanbanCard
+                key={habit.id}
+                id={habit.id}
+                title={habit.title}
+                description={habit.description}
+                timePerWeek={habit.time_per_week}
+                frequency={habit.frequency}
+                streak={habit.streak}
+                category={habit.category}
+                onClick={handleHabitClick}
+              />
+            ))}
+            {inProgressHabits.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No habits in progress
+              </div>
+            )}
+          </HabitColumn>
+
+          <HabitColumn
+            title="Planned"
+            icon={<Clock className="w-5 h-5" />}
+            onAdd={isOwnProfile ? () => handleAddHabit("planned") : undefined}
+          >
+            {plannedHabits.map((habit) => (
+              <HabitKanbanCard
+                key={habit.id}
+                id={habit.id}
+                title={habit.title}
+                description={habit.description}
+                timePerWeek={habit.time_per_week}
+                frequency={habit.frequency}
+                category={habit.category}
+                onClick={handleHabitClick}
+              />
+            ))}
+            {plannedHabits.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No planned habits
+              </div>
+            )}
+          </HabitColumn>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <HabitSection
-          title="Current Habits"
-          description="Your established daily and weekly routines"
-          icon={<Target className="w-5 h-5" />}
-        >
-          {currentHabits.map((habit, index) => (
-            <HabitCard key={index} {...habit} />
-          ))}
-        </HabitSection>
+      <HabitDetailDialog
+        habitId={selectedHabitId}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onDelete={fetchHabits}
+        userId={user.id}
+        isOwnHabit={isOwnProfile}
+      />
 
-        <HabitSection
-          title="In Progress"
-          description="New habits you're currently building"
-          icon={<Zap className="w-5 h-5" />}
-        >
-          {workingOnHabits.map((habit, index) => (
-            <HabitCard key={index} {...habit} />
-          ))}
-        </HabitSection>
-
-        <HabitSection
-          title="Planned"
-          description="Habits you want to start in the future"
-          icon={<Clock className="w-5 h-5" />}
-        >
-          {plannedHabits.map((habit, index) => (
-            <HabitCard key={index} {...habit} />
-          ))}
-        </HabitSection>
-
-        <HabitSection
-          title="Subscribed Habits"
-          description="Habits you've adopted from others"
-          icon={<Heart className="w-5 h-5" />}
-        >
-          {subscribedHabits.map((habit, index) => (
-            <HabitCard key={index} {...habit} />
-          ))}
-        </HabitSection>
-      </div>
+      {isOwnProfile && (
+        <AddHabitDialog
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          userId={user.id}
+          initialStatus={addStatus}
+          onSuccess={fetchHabits}
+        />
+      )}
     </div>
   );
 };

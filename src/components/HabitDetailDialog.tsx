@@ -17,6 +17,7 @@ interface HabitDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   onDelete: () => void;
   userId: string;
+  isOwnHabit?: boolean;
 }
 
 export const HabitDetailDialog = ({
@@ -25,6 +26,7 @@ export const HabitDetailDialog = ({
   onOpenChange,
   onDelete,
   userId,
+  isOwnHabit = true,
 }: HabitDetailDialogProps) => {
   const [habit, setHabit] = useState<any>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -165,18 +167,7 @@ export const HabitDetailDialog = ({
           )}
 
           <div className="flex gap-2 pt-4 border-t border-border">
-            {!isOwner && habit.is_public && (
-              <Button
-                onClick={handleSubscribe}
-                disabled={loading}
-                variant={isSubscribed ? "outline" : "default"}
-              >
-                <Heart className={`w-4 h-4 mr-2 ${isSubscribed ? "fill-current" : ""}`} />
-                {isSubscribed ? "Subscribed" : "Subscribe"}
-              </Button>
-            )}
-            
-            {isOwner && (
+            {isOwnHabit ? (
               <Button
                 onClick={handleDelete}
                 disabled={loading}
@@ -184,6 +175,15 @@ export const HabitDetailDialog = ({
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubscribe}
+                disabled={loading}
+                variant={isSubscribed ? "outline" : "default"}
+              >
+                <Heart className={`w-4 h-4 mr-2 ${isSubscribed ? "fill-current" : ""}`} />
+                {isSubscribed ? "Subscribed" : "Subscribe"}
               </Button>
             )}
           </div>
