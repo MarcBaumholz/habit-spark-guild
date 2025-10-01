@@ -8,7 +8,7 @@ import { HabitKanbanCard } from "@/components/HabitKanbanCard";
 import { HabitDetailDialog } from "@/components/HabitDetailDialog";
 import { AddHabitDialog } from "@/components/AddHabitDialog";
 import { Button } from "@/components/ui/button";
-import { Target, Zap, Clock, ArrowLeft } from "lucide-react";
+import { Target, Zap, Clock, ArrowLeft, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
@@ -18,6 +18,7 @@ const Profile = () => {
   const [currentHabits, setCurrentHabits] = useState<any[]>([]);
   const [inProgressHabits, setInProgressHabits] = useState<any[]>([]);
   const [plannedHabits, setPlannedHabits] = useState<any[]>([]);
+  const [subscribedHabits, setSubscribedHabits] = useState<any[]>([]);
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -44,8 +45,11 @@ const Profile = () => {
     if (user && userId) {
       fetchProfile();
       fetchHabits();
+      if (isOwnProfile) {
+        fetchSubscribedHabits();
+      }
     }
-  }, [user, userId]);
+  }, [user, userId, isOwnProfile]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -90,6 +94,38 @@ const Profile = () => {
     setCurrentHabits(data.filter((h) => h.status === "current"));
     setInProgressHabits(data.filter((h) => h.status === "in_progress"));
     setPlannedHabits(data.filter((h) => h.status === "planned"));
+  };
+
+  const fetchSubscribedHabits = async () => {
+    if (!user) return;
+
+    const { data: subscriptions, error: subError } = await supabase
+      .from("subscribed_habits")
+      .select("habit_id")
+      .eq("user_id", user.id);
+
+    if (subError) {
+      console.error("Error fetching subscriptions:", subError);
+      return;
+    }
+
+    const habitIds = subscriptions?.map((s) => s.habit_id) || [];
+    if (habitIds.length === 0) {
+      setSubscribedHabits([]);
+      return;
+    }
+
+    const { data: habits, error: habitsError } = await supabase
+      .from("habits")
+      .select("*")
+      .in("id", habitIds);
+
+    if (habitsError) {
+      console.error("Error fetching subscribed habits:", habitsError);
+      return;
+    }
+
+    setSubscribedHabits(habits || []);
   };
 
   const handleHabitClick = (id: string) => {
@@ -141,6 +177,30 @@ const Profile = () => {
       />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {isOwnProfile && subscribedHabits.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <Heart className="w-6 h-6 text-primary" />
+              Subscribed Habits
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {subscribedHabits.map((habit) => (
+                <HabitKanbanCard
+                  key={habit.id}
+                  id={habit.id}
+                  title={habit.title}
+                  description={habit.description}
+                  timePerWeek={habit.time_per_week}
+                  frequency={habit.frequency}
+                  streak={habit.streak}
+                  category={habit.category}
+                  onClick={handleHabitClick}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-280px)]">
           <HabitColumn
             title="Current Habits"

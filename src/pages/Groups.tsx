@@ -12,6 +12,7 @@ const Groups = () => {
   const [user, setUser] = useState<User | null>(null);
   const [groups, setGroups] = useState<any[]>([]);
   const [memberCounts, setMemberCounts] = useState<{ [key: string]: number }>({});
+  const [groupMembers, setGroupMembers] = useState<{ [key: string]: any[] }>({});
   const [userGroups, setUserGroups] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -58,16 +59,34 @@ const Groups = () => {
 
     setGroups(data || []);
 
-    // Fetch member counts for each group
+    // Fetch member counts and member profiles for each group
     const counts: { [key: string]: number } = {};
+    const members: { [key: string]: any[] } = {};
+    
     for (const group of data || []) {
-      const { count } = await supabase
+      const { data: memberData, count } = await supabase
         .from("group_members")
-        .select("*", { count: "exact", head: true })
-        .eq("group_id", group.id);
+        .select("user_id", { count: "exact" })
+        .eq("group_id", group.id)
+        .limit(4);
+      
       counts[group.id] = count || 0;
+
+      if (memberData && memberData.length > 0) {
+        const userIds = memberData.map((m) => m.user_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("avatar_url, username, user_id")
+          .in("user_id", userIds);
+        
+        members[group.id] = profiles || [];
+      } else {
+        members[group.id] = [];
+      }
     }
+    
     setMemberCounts(counts);
+    setGroupMembers(members);
   };
 
   const fetchUserGroups = async () => {
@@ -193,6 +212,19 @@ const Groups = () => {
                         {currentCount} / {group.max_members} members
                       </span>
                     </div>
+
+                    {groupMembers[group.id]?.length > 0 && (
+                      <div className="flex -space-x-2">
+                        {groupMembers[group.id].slice(0, 4).map((member) => (
+                          <Avatar key={member.user_id} className="w-8 h-8 border-2 border-background">
+                            <AvatarImage src={member.avatar_url} />
+                            <AvatarFallback className="text-xs bg-primary/20">
+                              {member.username?.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                      </div>
+                    )}
                     
                     {isMember ? (
                       <Button 

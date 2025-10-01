@@ -13,6 +13,7 @@ const GroupDetail = () => {
   const [user, setUser] = useState<User | null>(null);
   const [group, setGroup] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
+  const [isMember, setIsMember] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -33,6 +34,7 @@ const GroupDetail = () => {
     if (user && groupId) {
       fetchGroup();
       fetchMembers();
+      checkMembership();
     }
   }, [user, groupId]);
 
@@ -105,6 +107,45 @@ const GroupDetail = () => {
     setMembers(mergedMembers);
   };
 
+  const checkMembership = async () => {
+    if (!user || !groupId) return;
+
+    const { data } = await supabase
+      .from("group_members")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("group_id", groupId)
+      .maybeSingle();
+
+    setIsMember(!!data);
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!user || !groupId) return;
+
+    const { error } = await supabase
+      .from("group_members")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("group_id", groupId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to leave group.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Left Group",
+      description: "You've left the group.",
+    });
+
+    navigate("/groups");
+  };
+
   const handleViewProfile = (userId: string) => {
     navigate(`/profile/${userId}`);
   };
@@ -133,11 +174,20 @@ const GroupDetail = () => {
         </Button>
 
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">{group.name}</h1>
-          <p className="text-muted-foreground">{group.description}</p>
-          <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
-            <Users className="w-4 h-4" />
-            <span>{members.length} / {group.max_members} members</span>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground mb-2">{group.name}</h1>
+              <p className="text-muted-foreground">{group.description}</p>
+              <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
+                <Users className="w-4 h-4" />
+                <span>{members.length} / {group.max_members} members</span>
+              </div>
+            </div>
+            {isMember && (
+              <Button variant="outline" onClick={handleLeaveGroup}>
+                Leave Group
+              </Button>
+            )}
           </div>
         </div>
 

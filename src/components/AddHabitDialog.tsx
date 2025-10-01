@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddHabitDialogProps {
@@ -34,6 +35,7 @@ export const AddHabitDialog = ({
   const [timePerWeek, setTimePerWeek] = useState("");
   const [frequency, setFrequency] = useState("");
   const [status, setStatus] = useState(initialStatus);
+  const [isPublic, setIsPublic] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -50,6 +52,7 @@ export const AddHabitDialog = ({
         time_per_week: timePerWeek,
         frequency,
         status,
+        is_public: isPublic,
       });
 
       if (error) throw error;
@@ -153,6 +156,18 @@ export const AddHabitDialog = ({
                 className="mt-1"
               />
             </div>
+          </div>
+
+          <div className="flex items-center justify-between py-2 px-1 rounded-lg bg-muted/50">
+            <div>
+              <Label htmlFor="public" className="cursor-pointer">Make Public</Label>
+              <p className="text-xs text-muted-foreground mt-1">Others can view and subscribe to this habit</p>
+            </div>
+            <Switch
+              id="public"
+              checked={isPublic}
+              onCheckedChange={setIsPublic}
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
