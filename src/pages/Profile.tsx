@@ -156,17 +156,15 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-bg">
-      {!isOwnProfile && (
-        <div className="max-w-7xl mx-auto px-6 pt-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        </div>
-      )}
+      <div className="max-w-7xl mx-auto px-6 pt-6">
+        <Button 
+          variant="ghost" 
+          onClick={() => isOwnProfile ? navigate("/groups") : navigate(-1)}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          {isOwnProfile ? "Back to Groups" : "Back"}
+        </Button>
+      </div>
 
       <ProfileHeader
         user={{ id: userId } as User}

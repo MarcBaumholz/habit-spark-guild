@@ -120,6 +120,40 @@ const GroupDetail = () => {
     setIsMember(!!data);
   };
 
+  const handleJoinGroup = async () => {
+    if (!user || !groupId) return;
+
+    if (members.length >= group.max_members) {
+      toast({
+        title: "Group Full",
+        description: "This group has reached its maximum capacity.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("group_members")
+      .insert({ group_id: groupId, user_id: user.id });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to join group.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "You've joined the group!",
+    });
+
+    checkMembership();
+    fetchMembers();
+  };
+
   const handleLeaveGroup = async () => {
     if (!user || !groupId) return;
 
@@ -143,7 +177,8 @@ const GroupDetail = () => {
       description: "You've left the group.",
     });
 
-    navigate("/groups");
+    checkMembership();
+    fetchMembers();
   };
 
   const handleViewProfile = (userId: string) => {
@@ -183,9 +218,13 @@ const GroupDetail = () => {
                 <span>{members.length} / {group.max_members} members</span>
               </div>
             </div>
-            {isMember && (
+            {isMember ? (
               <Button variant="outline" onClick={handleLeaveGroup}>
                 Leave Group
+              </Button>
+            ) : (
+              <Button onClick={handleJoinGroup} disabled={members.length >= group.max_members}>
+                {members.length >= group.max_members ? "Group Full" : "Join Group"}
               </Button>
             )}
           </div>
