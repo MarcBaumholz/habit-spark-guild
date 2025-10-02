@@ -76,45 +76,78 @@ export type Database = {
       habits: {
         Row: {
           category: string | null
+          context: string | null
           created_at: string | null
           description: string | null
+          difficulty: string | null
+          domains: string[] | null
           frequency: string | null
+          frequency_days: number | null
+          habit_loop: string | null
+          hurdles: string | null
           id: string
+          implementation_intentions: string | null
           is_public: boolean | null
+          minimal_dose: string | null
+          reminder_type: string | null
+          smart_goal: string | null
           status: Database["public"]["Enums"]["habit_status"] | null
           streak: number | null
           time_per_week: string | null
           title: string
           updated_at: string | null
           user_id: string
+          why: string | null
         }
         Insert: {
           category?: string | null
+          context?: string | null
           created_at?: string | null
           description?: string | null
+          difficulty?: string | null
+          domains?: string[] | null
           frequency?: string | null
+          frequency_days?: number | null
+          habit_loop?: string | null
+          hurdles?: string | null
           id?: string
+          implementation_intentions?: string | null
           is_public?: boolean | null
+          minimal_dose?: string | null
+          reminder_type?: string | null
+          smart_goal?: string | null
           status?: Database["public"]["Enums"]["habit_status"] | null
           streak?: number | null
           time_per_week?: string | null
           title: string
           updated_at?: string | null
           user_id: string
+          why?: string | null
         }
         Update: {
           category?: string | null
+          context?: string | null
           created_at?: string | null
           description?: string | null
+          difficulty?: string | null
+          domains?: string[] | null
           frequency?: string | null
+          frequency_days?: number | null
+          habit_loop?: string | null
+          hurdles?: string | null
           id?: string
+          implementation_intentions?: string | null
           is_public?: boolean | null
+          minimal_dose?: string | null
+          reminder_type?: string | null
+          smart_goal?: string | null
           status?: Database["public"]["Enums"]["habit_status"] | null
           streak?: number | null
           time_per_week?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
+          why?: string | null
         }
         Relationships: []
       }
@@ -123,8 +156,10 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string | null
+          habit_type: string | null
           id: string
           personality_type: string | null
+          skills: string[] | null
           total_streak: number | null
           updated_at: string | null
           user_id: string
@@ -134,8 +169,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          habit_type?: string | null
           id?: string
           personality_type?: string | null
+          skills?: string[] | null
           total_streak?: number | null
           updated_at?: string | null
           user_id: string
@@ -145,8 +182,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          habit_type?: string | null
           id?: string
           personality_type?: string | null
+          skills?: string[] | null
           total_streak?: number | null
           updated_at?: string | null
           user_id?: string
